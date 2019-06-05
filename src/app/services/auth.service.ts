@@ -6,6 +6,8 @@ import * as auth0 from 'auth0-js';
 @Injectable()
 export class AuthService {
 
+  public userProfile : any;
+
   private _idToken: string;
   private _accessToken: string;
   private _expiresAt: number;
@@ -15,7 +17,7 @@ export class AuthService {
     domain: 'hernandvo.auth0.com',
     responseType: 'token id_token',
     redirectUri: 'http://localhost:4200/callback',
-    scope: 'openid'
+    scope: 'openid profile'
   });
 
   constructor(public router: Router) {
@@ -83,6 +85,21 @@ export class AuthService {
     // Check whether the current time is past the
     // access token's expiry time
     return this._accessToken && Date.now() < this._expiresAt;
+  }
+
+  public getProfile(cb): void {
+    const accessToken = localStorage.getItem('access_token');
+    if (!accessToken) {
+      throw new Error('Access token must exist to fetch profile');
+    }
+
+    const self = this;
+    this.auth0.client.userInfo(accessToken, (err, profile) => {
+      if (profile) {
+        self.userProfile = profile;
+      }
+      cb(err, profile);
+    });
   }
 
 }
